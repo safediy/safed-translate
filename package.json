@@ -31,5 +31,8 @@
     "pdfjs-dist": "^2.6.347",
     "tesseract.js": "^6.0.0",
     "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "md-to-pdf": "^5.2.5"
   }
 }
