@@ -4,6 +4,10 @@ const { handleMedia } = require("../handlers/mediaHandler");
 const { messageHandler } = require("../handlers/messageHandler");
 const { startHandler } = require("../handlers/startHandler");
 const { callbackQuery } = require("../handlers/callbackHandler");
+const {
+    enqueueWebhookUpdate,
+    startWebhookUpdateConsumer,
+} = require("../../queue/updateQueue");
 
 const bot = require("./bot");
 
@@ -18,10 +22,20 @@ const RENDER_EXTERNAL_URL = process.env.RENDER_EXTERNAL_URL;
 
 bot.setWebHook(`${RENDER_EXTERNAL_URL}/webhook/${TOKEN}`);
 
-app.post(`/webhook/${TOKEN}`, (req, res) => {
-    console.log("Telegram update:", JSON.stringify(req.body, null, 2));
-    bot.processUpdate(req.body);
-    res.sendStatus(200);
+app.post(`/webhook/${TOKEN}`, async (req, res) => {
+    try {
+        const isQueued = await enqueueWebhookUpdate(req.body);
+
+        // Fallback for environments where RabbitMQ is disabled/unavailable.
+        if (!isQueued) {
+            await bot.processUpdate(req.body);
+        }
+
+        res.sendStatus(200);
+    } catch (error) {
+        console.error("Webhook processing error:", error.message);
+        res.sendStatus(500);
+    }
 });
 
 app.get('/ret-time', (_, res) => {
@@ -29,6 +43,10 @@ app.get('/ret-time', (_, res) => {
 });
 
 const PORT = process.env.PORT;
+
+startWebhookUpdateConsumer(bot).catch((error) => {
+    console.error("Failed to start webhook consumer:", error.message);
+});
 
 app.listen(PORT, () => {
     console.log(`Bot server running on port ${PORT}`);

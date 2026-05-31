@@ -8,9 +8,15 @@ const UPLOAD_DIR = path.join(__dirname, "../../documents");
  * @param {object} fileData - Telegram file metadata object
  * @returns {Promise<{url: string, localFilePath: string, fileName: string}>} Download result
  */
-async function downloadTelegramFile(bot, fileData) {
+async function downloadTelegramFile(bot, fileData, options = {}) {
     if (!fileData?.file_id) {
         throw new Error('Invalid file data: missing file_id');
+    }
+
+    const { maxFileSizeBytes } = options;
+
+    if (maxFileSizeBytes && fileData.file_size && fileData.file_size > maxFileSizeBytes) {
+        throw new Error(`File is too large (${Math.round(fileData.file_size / 1024 / 1024)} MB)`);
     }
 
     // Get file info from Telegram
@@ -30,7 +36,17 @@ async function downloadTelegramFile(bot, fileData) {
     }
 
     // Download file
-    const response = await axios({ url: fileUrl, responseType: 'stream' });
+    const response = await axios({
+        url: fileUrl,
+        responseType: 'stream',
+        timeout: 60000,
+        maxRedirects: 3,
+    });
+
+    const contentLength = Number(response.headers['content-length'] || 0);
+    if (maxFileSizeBytes && contentLength && contentLength > maxFileSizeBytes) {
+        throw new Error(`File is too large (${Math.round(contentLength / 1024 / 1024)} MB)`);
+    }
 
     await new Promise((resolve, reject) => {
         const writer = fs.createWriteStream(localFilePath);

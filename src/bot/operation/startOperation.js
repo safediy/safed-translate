@@ -15,10 +15,6 @@ async function start(chatId, msg) {
 
     const client = await authHandler.getClientByChatId(chatId);
 
-    console.log('====================================');
-    console.log(client);
-    console.log('====================================');
-
     if (client) {
 
       const welcomeLoggedKey =

@@ -1,8 +1,8 @@
 const axios = require("axios");
 require("dotenv").config();
 
-const SUPABASE_URL = 'https://lejwziturkfjzxtlpyeq.supabase.co';
-const SUPABASE_API_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxland6aXR1cmtmanp4dGxweWVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUzNjk2NjcsImV4cCI6MjA3MDk0NTY2N30.4tclQexmgISM5wV-fTfbIXIVq_BTn0234UtTQoEN3B4';
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_API_KEY = process.env.SUPABASE_API_KEY;
 
 async function apiRequest(method, endpoint, data = {}, headers = {}) {
 
